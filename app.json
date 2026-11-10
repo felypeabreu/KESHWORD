@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Kesh",
+    "slug": "kesh",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "kesh",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
