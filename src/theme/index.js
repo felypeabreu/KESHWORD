@@ -13,3 +13,17 @@ export const colors = {
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
 
 export const radius = { sm: 8, md: 12, lg: 20 };
+
+// Tamanhos de texto usados no app (um lugar só para mudar tudo).
+export const typography = {
+  title: { fontSize: 26, fontWeight: '800' },
+  subtitle: { fontSize: 18, fontWeight: '700' },
+  body: { fontSize: 15, fontWeight: '400' },
+  caption: { fontSize: 12, fontWeight: '600' },
+};
+
+// A partir de qual largura de tela o layout muda (em pixels).
+export const breakpoints = { tablet: 600, desktop: 900 };
+
+// Largura máxima do conteúdo em telas grandes.
+export const layout = { maxWidth: 1200 };
