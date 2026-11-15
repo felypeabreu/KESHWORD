@@ -41,7 +41,6 @@ export default function MasculinoScreen() {
   const { user } = useAuth();
   const { width } = useWindowDimensions();
 
-  // Detecta se está no navegador do computador ou em tela pequena de celular
   const isDesktop = width >= 860;
   const isTablet = width >= 600 && width < 860;
 
@@ -100,7 +99,6 @@ export default function MasculinoScreen() {
     showToast(`${product.name} (${chosenSize}) na sacola!`);
   };
 
-  // Largura responsiva dos cards (4 colunas no PC, 3 no tablet, 2 no celular)
   const cardWidth = isDesktop ? '23.5%' : isTablet ? '31.5%' : '48%';
   const lookCardWidth = isDesktop ? '23.5%' : '48%';
 
@@ -108,7 +106,6 @@ export default function MasculinoScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.cream} />
 
-      {/* HEADER (100% da largura) */}
       <View style={[styles.nav, isDesktop && styles.navDesktop]}>
         <View style={styles.logoWrap}>
           <View style={styles.logoSquare} />
@@ -125,7 +122,6 @@ export default function MasculinoScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* HERO (100% rosa, lado a lado no PC) */}
         <View style={[styles.hero, isDesktop && styles.heroDesktop]}>
           <View style={[styles.heroLeft, isDesktop && styles.heroLeftDesktop]}>
             <View style={styles.tag}>
@@ -143,12 +139,7 @@ export default function MasculinoScreen() {
           </View>
 
           <View style={[styles.heroPhotoBox, isDesktop && styles.heroPhotoBoxDesktop]}>
-            <Image
-              source={{
-                uri: 'https://images.unsplash.com/photo-1632682582909-2b3a2581eef7?auto=format&fit=crop&w=1000&q=80',
-              }}
-              style={styles.heroPhoto}
-            />
+            <Image source={require('../../assets/hero-masculino.jpg')} style={styles.heroPhoto} />
             <View style={styles.sticker}>
               <Text style={styles.stickerText}>NOVO{'\n'}DROP</Text>
             </View>
@@ -158,14 +149,12 @@ export default function MasculinoScreen() {
           </View>
         </View>
 
-        {/* MARQUEE */}
         <View style={styles.marquee}>
           <Text style={styles.marqueeText}>
             FRETE GRÁTIS ACIMA DE R$ 250  ✦  6X SEM JUROS  ✦  TROCA EM 30 DIAS  ✦  COLEÇÃO 01 NO AR
           </Text>
         </View>
 
-        {/* CATÁLOGO */}
         <View style={[styles.catalog, isDesktop && styles.sectionDesktop]}>
           <View style={styles.catHead}>
             <Text style={[styles.catTitle, isDesktop && styles.catTitleDesktop]}>
@@ -323,7 +312,6 @@ export default function MasculinoScreen() {
           )}
         </View>
 
-        {/* LOOKBOOK */}
         <View style={[styles.lookSection, isDesktop && styles.sectionDesktop]}>
           <View style={styles.lookHead}>
             <Text style={[styles.lookTitle, isDesktop && styles.catTitleDesktop]}>LOOKBOOK</Text>
@@ -350,7 +338,6 @@ export default function MasculinoScreen() {
           </View>
         </View>
 
-        {/* BENEFÍCIOS */}
         <View
           style={[
             styles.perksSection,
@@ -385,7 +372,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.cream, width: '100%' },
   scrollContent: { paddingBottom: 0, width: '100%' },
 
-  /* NAV */
   nav: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -421,7 +407,6 @@ const styles = StyleSheet.create({
   },
   bagBtnText: { color: COLORS.cream, fontWeight: '800', fontSize: 13, letterSpacing: 1 },
 
-  /* HERO */
   hero: {
     backgroundColor: COLORS.pink,
     paddingHorizontal: 20,
@@ -529,7 +514,6 @@ const styles = StyleSheet.create({
   photoTagText: { color: COLORS.cream, fontWeight: '800', fontSize: 12, letterSpacing: 1 },
   heroNote: { marginTop: 20, fontSize: 14, fontWeight: '800', color: COLORS.ink },
 
-  /* MARQUEE */
   marquee: {
     backgroundColor: COLORS.ink,
     paddingVertical: 12,
@@ -546,7 +530,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  /* CATÁLOGO */
   catalog: { paddingHorizontal: 20, paddingVertical: 36, width: '100%' },
   sectionDesktop: { paddingHorizontal: 56, paddingVertical: 56 },
   catHead: {
@@ -617,7 +600,6 @@ const styles = StyleSheet.create({
   sortPillText: { fontSize: 13, fontWeight: '700', color: COLORS.ink },
   sortPillTextActive: { color: COLORS.cream },
 
-  /* GRID */
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -713,7 +695,6 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 24, fontWeight: '900', color: COLORS.ink, marginBottom: 6 },
   emptySub: { textAlign: 'center', fontWeight: '600', color: COLORS.ink },
 
-  /* LOOKBOOK */
   lookSection: {
     backgroundColor: COLORS.pink,
     paddingHorizontal: 20,
@@ -751,7 +732,6 @@ const styles = StyleSheet.create({
   },
   lookImg: { width: '100%', height: '100%', resizeMode: 'cover' },
 
-  /* BENEFÍCIOS */
   perksSection: {
     backgroundColor: COLORS.blue,
     padding: 24,
@@ -764,7 +744,6 @@ const styles = StyleSheet.create({
   perkTitle: { fontSize: 22, fontWeight: '900', color: COLORS.cream },
   perkText: { color: COLORS.white, fontSize: 14, lineHeight: 20 },
 
-  /* TOAST */
   toast: {
     position: 'absolute',
     bottom: 24,

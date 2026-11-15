@@ -37,7 +37,8 @@ export default function ProdutoScreen() {
   const [size, setSize] = useState(sizes[Math.min(1, sizes.length - 1)]);
   const [added, setAdded] = useState(false);
 
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)/masculino'));
+  const catalogRoute = product?.gender === 'feminino' ? '/(tabs)/feminino' : '/(tabs)/masculino';
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace(catalogRoute));
 
   if (!product) {
     return (
@@ -78,7 +79,13 @@ export default function ProdutoScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.content, isDesktop && styles.contentDesktop]}>
           <View style={[styles.imageWrap, isDesktop && styles.imageWrapDesktop]}>
-            <Image source={imageSource(product)} style={styles.image} resizeMode="cover" />
+            {imageSource(product) ? (
+              <Image source={imageSource(product)} style={styles.image} resizeMode="cover" />
+            ) : (
+              <View style={styles.noPhoto}>
+                <Text style={styles.noPhotoText}>FOTO EM BREVE</Text>
+              </View>
+            )}
             {product.badge === 'NOVO' && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>NOVO</Text>
@@ -154,6 +161,14 @@ const styles = StyleSheet.create({
   imageWrap: { width: '100%', aspectRatio: 3 / 4, position: 'relative' },
   imageWrapDesktop: { flex: 1, aspectRatio: undefined, height: 640 },
   image: { width: '100%', height: '100%' },
+  noPhoto: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.cream,
+  },
+  noPhotoText: { color: COLORS.ink, fontWeight: '800', letterSpacing: 2, fontSize: 14 },
   badge: {
     position: 'absolute',
     top: 12,

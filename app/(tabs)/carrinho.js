@@ -20,7 +20,6 @@ export default function Carrinho() {
 
   if (initializing) return <Loading />;
 
-  // Login só é exigido para usar o carrinho
   if (!user) {
     return (
       <View style={styles.center}>

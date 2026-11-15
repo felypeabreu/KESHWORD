@@ -9,8 +9,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from './Toast';
 
-// Lista de produtos reutilizada na Home e nos catálogos masculino/feminino.
-// Adicionar ao carrinho exige login: se não estiver logado, vai para a tela de login.
 export default function ProductGrid({ categoria, onlyFeatured = false, header }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);

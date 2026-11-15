@@ -142,27 +142,117 @@ export const PRODUCTS = [
     sizes: ['Único'],
     image: require('../../assets/produtos/bone-five-panel.jpg'),
   },
+  {
+    id: 13,
+    name: 'Cropped Boxy Logo',
+    cat: 'Camisetas',
+    category: 'camisetas',
+    gender: 'feminino',
+    price: 79.90,
+    badge: 'NOVO',
+    bg: '#FC3B7F',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/cropped-boxy-logo.jpg'),
+  },
+  {
+    id: 14,
+    name: 'Blusa Street',
+    cat: 'Camisetas',
+    category: 'camisetas',
+    gender: 'feminino',
+    price: 69.90,
+    bg: '#FEF1CF',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/blusa-street.jpg'),
+  },
+  {
+    id: 15,
+    name: 'Moletom Cropped Capuz',
+    cat: 'Moletons',
+    category: 'moletons',
+    gender: 'feminino',
+    price: 169.90,
+    old: 199.90,
+    badge: '-15%',
+    bg: '#0032A8',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/moletom-cropped-capuz.jpg'),
+  },
+  {
+    id: 16,
+    name: 'Jaqueta Corta-vento Cropped',
+    cat: 'Jaquetas',
+    category: 'jaquetas',
+    gender: 'feminino',
+    price: 219.90,
+    badge: 'NOVO',
+    bg: '#FEF1CF',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/jaqueta-corta-vento-cropped.jpg'),
+  },
+  {
+    id: 17,
+    name: 'Calça Wide Leg Cargo',
+    cat: 'Calças',
+    category: 'calcas',
+    gender: 'feminino',
+    price: 189.90,
+    bg: '#FC3B7F',
+    sizes: ['36', '38', '40', '42'],
+    image: require('../../assets/produtos/calca-wide-leg-cargo.jpg'),
+  },
+  {
+    id: 18,
+    name: 'Calça Jogger Feminina',
+    cat: 'Calças',
+    category: 'calcas',
+    gender: 'feminino',
+    price: 159.90,
+    bg: '#FEF1CF',
+    sizes: ['36', '38', '40', '42'],
+    image: require('../../assets/produtos/calca-jogger-feminina.jpg'),
+  },
+  {
+    id: 19,
+    name: 'Boné Aba Curva',
+    cat: 'Acessórios',
+    category: 'acessorios',
+    gender: 'feminino',
+    price: 64.90,
+    bg: '#0032A8',
+    sizes: ['Único'],
+    image: require('../../assets/produtos/bone-aba-curva.jpg'),
+  },
+  {
+    id: 20,
+    name: 'Bucket Hat',
+    cat: 'Acessórios',
+    category: 'acessorios',
+    gender: 'feminino',
+    price: 69.90,
+    bg: '#FEF1CF',
+    sizes: ['Único'],
+    image: require('../../assets/produtos/bucket-hat.jpg'),
+  },
 ];
 
-// A imagem pode ser um link (string) ou um arquivo local (require).
-// Esta função devolve o formato que o <Image source={...}> espera.
-export const imageSource = (product) =>
-  typeof product.image === 'string' ? { uri: product.image } : product.image;
+export const imageSource = (product) => {
+  if (!product.image) return null;
+  return typeof product.image === 'string' ? { uri: product.image } : product.image;
+};
 
-// Link (uri) da imagem, para telas que usam <Image source={{ uri }} /> (carrinho, ProductCard).
 export const imageUri = (product) => {
+  if (!product.image) return '';
   if (typeof product.image === 'string') return product.image;
   try {
     return Asset.fromModule(product.image).uri;
   } catch (e) {
-    return undefined;
+    return '';
   }
 };
 
-// Tamanhos padrão (usados pelo ProductCard)
 export const sizes = ['P', 'M', 'G', 'GG'];
 
-// Formato em português esperado por productService / ProductCard / ProductGrid
 export const products = PRODUCTS.map((p) => ({
   id: String(p.id),
   nome: p.name,
@@ -174,7 +264,6 @@ export const products = PRODUCTS.map((p) => ({
 
 export const findProductById = (id) => PRODUCTS.find((p) => String(p.id) === String(id));
 
-// Converte um produto + tamanho escolhido para o formato que o CartContext espera.
 export const toCartItem = (product, tamanho) => ({
   id: String(product.id),
   nome: product.name,

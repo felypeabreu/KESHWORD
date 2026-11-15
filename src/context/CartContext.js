@@ -39,7 +39,6 @@ export function CartProvider({ children }) {
   const [items, dispatch] = useReducer(reducer, []);
   const loaded = useRef(false);
 
-  // Ao logar: carrega o carrinho salvo no Firestore. Ao sair: limpa.
   useEffect(() => {
     loaded.current = false;
     if (!user) {
@@ -54,7 +53,6 @@ export function CartProvider({ children }) {
       });
   }, [user?.uid]);
 
-  // Sempre que o carrinho muda (e já foi carregado), salva no Firestore.
   useEffect(() => {
     if (user && loaded.current) {
       saveCart(user.uid, items).catch((e) => console.warn('Erro ao salvar carrinho:', e.message));
