@@ -12,60 +12,81 @@ import { PRODUCTS, products as localProducts } from '../data/products';
 
 const COLECAO = 'produtos';
 
-// Junta os dados que vieram do Firestore com a imagem local (pelo id).
-// O Firestore guarda só texto/números; a foto continua vindo do arquivo local.
-function comImagemLocal(id, dados) {
+// Monta o produto completo: dados locais + dados do Firestore por cima,
+// já nos DOIS formatos (name/price/sizes e nome/preco/tamanhos).
+function montar(id, dados = {}) {
+  const bruto = PRODUCTS.find((p) => String(p.id) === String(id));
+  if (!bruto && Object.keys(dados).length === 0) return null;
+
   const local = localProducts.find((p) => p.id === String(id));
-  return { ...local, ...dados, id: String(id) };
+  const p = { ...bruto, ...dados };
+
+  return {
+    ...p,
+    id: String(id),
+    // formato das telas do Felype
+    name: p.name ?? p.nome,
+    price: p.price ?? p.preco,
+    sizes: p.sizes ?? p.tamanhos,
+    // formato da Home / ProductGrid
+    nome: p.nome ?? p.name,
+    preco: p.preco ?? p.price,
+    tamanhos: p.tamanhos ?? p.sizes,
+    categoria: p.categoria ?? p.gender ?? 'masculino',
+    destaque: p.destaque ?? Boolean(p.badge),
+    imagem: local?.imagem,
+  };
 }
 
-// Lê os produtos da coleção "produtos".
-// Se a coleção estiver vazia (ou houver erro), usa os produtos locais.
+const todosLocais = () => PRODUCTS.map((p) => montar(p.id));
+
+// Lê os produtos do Firestore. Se vazio ou com erro, usa os locais.
 export async function fetchProducts(categoria) {
   try {
     const ref = collection(db, COLECAO);
     const q = categoria ? query(ref, where('categoria', '==', categoria)) : ref;
     const snap = await getDocs(q);
     if (!snap.empty) {
-      return snap.docs.map((d) => comImagemLocal(d.id, d.data()));
+      return snap.docs.map((d) => montar(d.id, d.data()));
     }
   } catch (e) {
     console.warn('Firestore indisponível, usando dados locais:', e.message);
   }
-  return categoria
-    ? localProducts.filter((p) => p.categoria === categoria)
-    : localProducts;
+  const lista = todosLocais();
+  return categoria ? lista.filter((p) => p.categoria === categoria) : lista;
 }
 
-// Busca UM produto pelo id (usado na página de detalhe).
+// Busca UM produto pelo id (página de detalhe). Devolve null se não existir.
 export async function fetchProductById(id) {
   try {
     const snap = await getDoc(doc(db, COLECAO, String(id)));
     if (snap.exists()) {
-      return comImagemLocal(snap.id, snap.data());
+      return montar(snap.id, snap.data());
     }
   } catch (e) {
     console.warn('Firestore indisponível, usando dado local:', e.message);
   }
-  return localProducts.find((p) => p.id === String(id)) ?? null;
+  return montar(id);
 }
 
-// Grava os produtos locais no Firestore (rodar UMA vez, para popular o banco).
-// Não grava a imagem: ela é um endereço local do servidor de desenvolvimento.
+// Grava os produtos no Firestore (rodar UMA vez). Não grava a foto.
 export async function seedProducts() {
   const batch = writeBatch(db);
 
-  localProducts.forEach((item) => {
-    const { id, imagem, ...dados } = item;
-    const bruto = PRODUCTS.find((p) => String(p.id) === id);
-
-    batch.set(
-      doc(db, COLECAO, id),
-      { ...dados, tamanhos: bruto?.sizes ?? [] },
-      { merge: true }
+  PRODUCTS.forEach((p) => {
+    const { id, image, ...dados } = p;
+    // o Firestore recusa valores "undefined", então filtramos
+    const limpo = Object.fromEntries(
+      Object.entries(dados).filter(([, v]) => v !== undefined)
     );
+
+    batch.set(doc(db, COLECAO, String(id)), {
+      ...limpo,
+      categoria: p.gender || 'masculino', // a consulta por categoria usa este campo
+      destaque: Boolean(p.badge),
+    });
   });
 
   await batch.commit();
-  return localProducts.length;
+  return PRODUCTS.length;
 }

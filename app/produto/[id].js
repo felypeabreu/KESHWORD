@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { useCart } from '../../src/context/CartContext';
-import { findProductById, imageSource, toCartItem } from '../../src/data/products';
+import { imageSource, toCartItem } from '../../src/data/products';
+import { fetchProductById } from '../../src/services/productService';
 
 const COLORS = {
   pink: '#FC3B7F',
@@ -32,12 +33,27 @@ export default function ProdutoScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 860;
 
-  const product = findProductById(Array.isArray(id) ? id[0] : id);
+    const idStr = Array.isArray(id) ? id[0] : id;
+  const [product, setProduct] = useState(undefined); // undefined = carregando, null = não achou
+
+  useEffect(() => {
+    fetchProductById(idStr).then(setProduct);
+  }, [idStr]);
   const sizes = product?.sizes || ['P', 'M', 'G', 'GG'];
   const [size, setSize] = useState(sizes[Math.min(1, sizes.length - 1)]);
   const [added, setAdded] = useState(false);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)/masculino'));
+
+    if (product === undefined) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.notFound}>
+          <Text style={styles.notFoundTitle}>Carregando...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!product) {
     return (
