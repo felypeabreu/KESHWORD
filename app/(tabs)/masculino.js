@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useCart } from '../../src/context/CartContext';
-import { PRODUCTS } from '../../src/data/products';
+import { useAuth } from '../../src/context/AuthContext';
+import { PRODUCTS, imageSource, toCartItem } from '../../src/data/products';
+import { fetchProducts } from '../../src/services/productService';
 
 const COLORS = {
   pink: '#FC3B7F',
@@ -36,7 +38,8 @@ const LOOKBOOK = [
 
 export default function MasculinoScreen() {
   const router = useRouter();
-  const { addToCart, totalItems } = useCart();
+  const { addItem, count } = useCart();
+  const { user } = useAuth();
   const { width } = useWindowDimensions();
 
   // Detecta se está no navegador do computador ou em tela pequena de celular
@@ -50,8 +53,13 @@ export default function MasculinoScreen() {
   const [favorites, setFavorites] = useState({});
   const [toastMsg, setToastMsg] = useState('');
 
-  const masculinoProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => !p.gender || p.gender.toLowerCase() === 'masculino');
+     const [masculinoProducts, setMasculinoProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts('masculino')
+      .then(setMasculinoProducts)
+      .finally(() => setLoading(false));
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -90,7 +98,11 @@ export default function MasculinoScreen() {
   const handleAddToCart = (product) => {
     const sizes = product.sizes || ROUPA;
     const chosenSize = selectedSizes[product.id] || sizes[Math.min(1, sizes.length - 1)];
-    addToCart({ ...product, size: chosenSize, qty: 1 });
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    addItem(toCartItem(product, chosenSize));
     showToast(`${product.name} (${chosenSize}) na sacola!`);
   };
 
@@ -114,7 +126,7 @@ export default function MasculinoScreen() {
           onPress={() => router.push('/(tabs)/carrinho')}
           activeOpacity={0.85}
         >
-          <Text style={styles.bagBtnText}>SACOLA ({totalItems || 0})</Text>
+          <Text style={styles.bagBtnText}>SACOLA ({count || 0})</Text>
         </TouchableOpacity>
       </View>
 
@@ -226,7 +238,7 @@ export default function MasculinoScreen() {
             </View>
           </View>
 
-          {filteredProducts.length === 0 ? (
+          {!loading && filteredProducts.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyTitle}>NADA POR AQUI</Text>
               <Text style={styles.emptySub}>
@@ -244,13 +256,12 @@ export default function MasculinoScreen() {
 
                 return (
                   <View key={item.id} style={[styles.card, { width: cardWidth }]}>
-                    <View
-                      style={[
-                        styles.thumb,
-                        { backgroundColor: item.bg || COLORS.cream, height: isDesktop ? 280 : 190 },
-                      ]}
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => router.push(`/produto/${item.id}`)}
+                      style={styles.thumb}
                     >
-                      <Image source={{ uri: item.image }} style={styles.productImg} />
+                      <Image source={imageSource(item)} style={styles.productImg} />
 
                       {item.badge === 'NOVO' && (
                         <View style={styles.badge}>
@@ -270,11 +281,13 @@ export default function MasculinoScreen() {
                       >
                         <Text style={styles.favIcon}>{isFav ? '♥' : '♡'}</Text>
                       </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
 
                     <View style={styles.cardInfo}>
                       <Text style={styles.cardCat}>{item.cat.toUpperCase()}</Text>
-                      <Text style={styles.cardName}>{item.name}</Text>
+                      <TouchableOpacity onPress={() => router.push(`/produto/${item.id}`)}>
+                        <Text style={styles.cardName}>{item.name}</Text>
+                      </TouchableOpacity>
 
                       <View style={styles.priceRow}>
                         <Text style={styles.priceMain}>{BRL.format(item.price)}</Text>
@@ -618,18 +631,13 @@ const styles = StyleSheet.create({
     rowGap: 24,
   },
   card: {
-    backgroundColor: COLORS.white,
-    borderWidth: 3,
-    borderColor: COLORS.ink,
-    shadowColor: COLORS.ink,
-    shadowOffset: { width: 6, height: 6 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
+    backgroundColor: 'transparent',
   },
   thumb: {
-    borderBottomWidth: 3,
-    borderColor: COLORS.ink,
+    width: '100%',
+    aspectRatio: 3 / 4,
     position: 'relative',
+    overflow: 'hidden',
   },
   productImg: { width: '100%', height: '100%', resizeMode: 'cover' },
   badge: {
@@ -646,28 +654,25 @@ const styles = StyleSheet.create({
     right: 10,
     top: 10,
     backgroundColor: COLORS.pink,
-    borderWidth: 2,
-    borderColor: COLORS.ink,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  offText: { fontWeight: '900', fontSize: 12, color: COLORS.ink },
+  offText: { fontWeight: '900', fontSize: 12, color: COLORS.white },
   favBtn: {
     position: 'absolute',
     right: 10,
     bottom: 10,
     width: 36,
     height: 36,
-    backgroundColor: COLORS.cream,
-    borderWidth: 2,
-    borderColor: COLORS.ink,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   favBtnActive: { backgroundColor: COLORS.pink },
   favIcon: { fontSize: 18, fontWeight: '900', color: COLORS.ink },
 
-  cardInfo: { padding: 14, gap: 8 },
+  cardInfo: { paddingHorizontal: 2, paddingVertical: 12, gap: 6 },
   cardCat: { fontSize: 11, fontWeight: '800', letterSpacing: 1, color: '#555' },
   cardName: { fontSize: 16, fontWeight: '800', color: COLORS.ink },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
