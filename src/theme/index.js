@@ -1,7 +1,7 @@
 export const colors = {
   primary: '#111111',
   accent: '#C8A96A',
-  background: '#FAFAF7',
+  background: '#FEF1CF',
   card: '#FFFFFF',
   text: '#1A1A1A',
   muted: '#7A7A7A',
@@ -27,3 +27,11 @@ export const breakpoints = { tablet: 600, desktop: 900 };
 
 // Largura máxima do conteúdo em telas grandes.
 export const layout = { maxWidth: 1200 };
+// Paleta da marca KESH (mesmas cores usadas no Masculino e no Feminino)
+export const brand = {
+  pink: '#FC3B7F',
+  cream: '#FEF1CF',
+  blue: '#0032A8',
+  ink: '#0d0d12',
+  white: '#ffffff',
+};
