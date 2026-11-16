@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { useCart } from '../../src/context/CartContext';
 import { useAuth } from '../../src/context/AuthContext';
-import { PRODUCTS, imageSource, toCartItem } from '../../src/data/products';
+import { imageSource, toCartItem } from '../../src/data/products';
+import { fetchProducts } from '../../src/services/productService';
 
 const COLORS = {
   pink: '#FC3B7F',
@@ -44,8 +45,13 @@ export default function FemininoScreen() {
   const [favorites, setFavorites] = useState({});
   const [toastMsg, setToastMsg] = useState('');
 
-  const femininoProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => p.gender === 'feminino');
+  const [femininoProducts, setFemininoProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts('feminino')
+      .then(setFemininoProducts)
+      .finally(() => setLoading(false));
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -213,7 +219,7 @@ export default function FemininoScreen() {
             </View>
           </View>
 
-          {filteredProducts.length === 0 ? (
+          {!loading && filteredProducts.length === 0 ? (
             <View style={styles.emptyBox}>
               <Text style={styles.emptyTitle}>NADA POR AQUI</Text>
               <Text style={styles.emptySub}>

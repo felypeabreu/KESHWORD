@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { useCart } from '../../src/context/CartContext';
-import { findProductById, imageSource, toCartItem } from '../../src/data/products';
+import { imageSource, toCartItem } from '../../src/data/products';
+import { fetchProductById } from '../../src/services/productService';
 
 const COLORS = {
   pink: '#FC3B7F',
@@ -32,13 +33,27 @@ export default function ProdutoScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 860;
 
-  const product = findProductById(Array.isArray(id) ? id[0] : id);
+    const idStr = Array.isArray(id) ? id[0] : id;
+  const [product, setProduct] = useState(undefined); // undefined = carregando, null = não achou
+
+  useEffect(() => {
+    fetchProductById(idStr).then(setProduct);
+  }, [idStr]);
   const sizes = product?.sizes || ['P', 'M', 'G', 'GG'];
   const [size, setSize] = useState(sizes[Math.min(1, sizes.length - 1)]);
   const [added, setAdded] = useState(false);
 
-  const catalogRoute = product?.gender === 'feminino' ? '/(tabs)/feminino' : '/(tabs)/masculino';
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace(catalogRoute));
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(tabs)/masculino'));
+
+    if (product === undefined) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.notFound}>
+          <Text style={styles.notFoundTitle}>Carregando...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!product) {
     return (
@@ -79,13 +94,7 @@ export default function ProdutoScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.content, isDesktop && styles.contentDesktop]}>
           <View style={[styles.imageWrap, isDesktop && styles.imageWrapDesktop]}>
-            {imageSource(product) ? (
-              <Image source={imageSource(product)} style={styles.image} resizeMode="cover" />
-            ) : (
-              <View style={styles.noPhoto}>
-                <Text style={styles.noPhotoText}>FOTO EM BREVE</Text>
-              </View>
-            )}
+            <Image source={imageSource(product)} style={styles.image} resizeMode="cover" />
             {product.badge === 'NOVO' && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>NOVO</Text>
@@ -161,14 +170,6 @@ const styles = StyleSheet.create({
   imageWrap: { width: '100%', aspectRatio: 3 / 4, position: 'relative' },
   imageWrapDesktop: { flex: 1, aspectRatio: undefined, height: 640 },
   image: { width: '100%', height: '100%' },
-  noPhoto: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.cream,
-  },
-  noPhotoText: { color: COLORS.ink, fontWeight: '800', letterSpacing: 2, fontSize: 14 },
   badge: {
     position: 'absolute',
     top: 12,
