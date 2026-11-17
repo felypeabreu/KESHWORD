@@ -2,9 +2,15 @@ import React, { useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius } from '../theme';
-const DESCONTO_PIX = 0.05;
+import PixPagamento from './PixPagamento';
+/* -------------------------------------------------------------------------- */
+/* Constantes                                                                 */
+/* -------------------------------------------------------------------------- */
+const DESCONTO_PIX = 0.05; // 5%
 const MAX_PARCELAS = 6;
+/* -------------------------------------------------------------------------- */
+/* Funções auxiliares                                                         */
+/* -------------------------------------------------------------------------- */
 const arredondar = (v) => Math.round(v * 100) / 100;
 const formatarMoeda = (valor) => {
     const [inteiro, centavos] = valor.toFixed(2).split('.');
@@ -18,6 +24,7 @@ const mascaraValidade = (t) => {
     const n = somenteNumeros(t).slice(0, 4);
     return n.length > 2 ? `${n.slice(0, 2)}/${n.slice(2)}` : n;
 };
+// Algoritmo de Luhn: detecta número de cartão digitado errado
 const cartaoValido = (numero) => {
     const digitos = somenteNumeros(numero);
     if (digitos.length < 13)
@@ -52,10 +59,20 @@ const validadeValida = (v) => {
 function Campo({ rotulo, erro, inputRef, style, ...rest }) {
     return (<View style={styles.campoWrapper}>
       <Text style={styles.rotulo}>{rotulo}</Text>
-      <TextInput ref={inputRef} placeholderTextColor={colors.muted} style={[styles.input, erro ? styles.inputErro : null, style]} {...rest}/>
+      <TextInput ref={inputRef} placeholderTextColor="#9CA3AF" style={[styles.input, erro ? styles.inputErro : null, style]} {...rest}/>
       {erro ? <Text style={styles.textoErro}>{erro}</Text> : null}
     </View>);
 }
+/* -------------------------------------------------------------------------- */
+/* Tela                                                                       */
+/* -------------------------------------------------------------------------- */
+/**
+ * Props:
+ *  - itens: [{ id, nome, tamanho?, cor?, quantidade, preco }]
+ *  - frete: número (R$)
+ *  - onVoltar: () => void
+ *  - onConcluir: ({ metodo, parcelas, subtotal, frete, desconto, total }) => void
+ */
 export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, onConcluir, }) {
     const [metodo, setMetodo] = useState('cartao');
     const [parcelas, setParcelas] = useState(1);
@@ -66,9 +83,11 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
     const [erros, setErros] = useState({});
     const [carregando, setCarregando] = useState(false);
     const [sucesso, setSucesso] = useState(false);
+    const [pixAberto, setPixAberto] = useState(false);
     const nomeRef = useRef(null);
     const validadeRef = useRef(null);
     const cvvRef = useRef(null);
+    // Totais
     const subtotal = arredondar(itens.reduce((s, i) => s + i.preco * i.quantidade, 0));
     const desconto = metodo === 'pix' ? arredondar(subtotal * DESCONTO_PIX) : 0;
     const total = arredondar(subtotal - desconto + frete);
@@ -91,6 +110,11 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
     const finalizar = () => {
         if (carregando)
             return;
+        // Pix: abre a tela com o QR Code (demonstração, sem cobrança real)
+        if (metodo === 'pix') {
+            setPixAberto(true);
+            return;
+        }
         if (metodo === 'cartao') {
             const novosErros = validarCartao();
             setErros(novosErros);
@@ -98,6 +122,9 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
                 return;
         }
         setCarregando(true);
+        // TODO: aqui entra a chamada ao seu backend / gateway de pagamento
+        // (Mercado Pago, Stripe, Pagar.me...). Nunca envie dados do cartão
+        // para um servidor seu sem usar o SDK/tokenização do gateway.
         setTimeout(() => {
             setCarregando(false);
             setSucesso(true);
@@ -120,9 +147,10 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
         { id: 'boleto', titulo: 'Boleto', icone: 'barcode-outline' },
     ];
     return (<SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      {/* Cabeçalho */}
       <View style={styles.header}>
         <Pressable onPress={onVoltar} hitSlop={12} style={styles.botaoVoltar}>
-          <Ionicons name="chevron-back" size={24} color={colors.text}/>
+          <Ionicons name="chevron-back" size={24} color="#111827"/>
         </Pressable>
         <Text style={styles.headerTitulo}>Pagamento</Text>
         <View style={styles.botaoVoltar}/>
@@ -130,11 +158,12 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
 
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {/* Resumo do pedido */}
           <Text style={styles.secaoTitulo}>Resumo do pedido</Text>
           <View style={styles.card}>
             {itens.map((item, index) => (<View key={item.id} style={[styles.itemLinha, index > 0 && styles.itemLinhaBorda]}>
                 <View style={styles.itemImagem}>
-                  <Ionicons name="shirt-outline" size={26} color={colors.muted}/>
+                  <Ionicons name="shirt-outline" size={26} color="#6B7280"/>
                 </View>
                 <View style={styles.flex}>
                   <Text style={styles.itemNome} numberOfLines={2}>
@@ -152,12 +181,13 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
               </View>))}
           </View>
 
+          {/* Forma de pagamento */}
           <Text style={styles.secaoTitulo}>Forma de pagamento</Text>
           <View style={styles.metodosLinha}>
             {metodos.map((m) => {
             const ativo = metodo === m.id;
             return (<Pressable key={m.id} onPress={() => setMetodo(m.id)} style={[styles.metodo, ativo && styles.metodoAtivo]}>
-                  <Ionicons name={m.icone} size={24} color={ativo ? colors.card : colors.text}/>
+                  <Ionicons name={m.icone} size={24} color={ativo ? '#FFFFFF' : '#374151'}/>
                   <Text style={[styles.metodoTexto, ativo && styles.metodoTextoAtivo]}>
                     {m.titulo}
                   </Text>
@@ -165,6 +195,7 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
         })}
           </View>
 
+          {/* Cartão */}
           {metodo === 'cartao' && (<View style={styles.card}>
               <Campo rotulo="Número do cartão" placeholder="0000 0000 0000 0000" keyboardType="number-pad" value={numero} onChangeText={(t) => {
                 setNumero(mascaraCartao(t));
@@ -206,8 +237,9 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
               </View>
             </View>)}
 
+          {/* Pix */}
           {metodo === 'pix' && (<View style={styles.infoBox}>
-              <Ionicons name="flash-outline" size={22} color={colors.primary}/>
+              <Ionicons name="flash-outline" size={22} color="#15803D"/>
               <Text style={styles.infoTexto}>
                 Pague via Pix e ganhe {Math.round(DESCONTO_PIX * 100)}% de desconto. Ao
                 finalizar, mostramos o QR Code e o código copia e cola. A aprovação é
@@ -215,14 +247,16 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
               </Text>
             </View>)}
 
+          {/* Boleto */}
           {metodo === 'boleto' && (<View style={styles.infoBox}>
-              <Ionicons name="information-circle-outline" size={22} color={colors.text}/>
+              <Ionicons name="information-circle-outline" size={22} color="#374151"/>
               <Text style={styles.infoTexto}>
                 O boleto vence em 3 dias úteis. Seu pedido é liberado após a compensação
                 do pagamento, que pode levar até 2 dias úteis.
               </Text>
             </View>)}
 
+          {/* Totais */}
           <Text style={styles.secaoTitulo}>Valores</Text>
           <View style={styles.card}>
             <View style={styles.totalLinha}>
@@ -249,17 +283,18 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
           </View>
 
           <View style={styles.seguro}>
-            <Ionicons name="lock-closed-outline" size={14} color={colors.muted}/>
+            <Ionicons name="lock-closed-outline" size={14} color="#6B7280"/>
             <Text style={styles.seguroTexto}>Pagamento seguro</Text>
           </View>
         </ScrollView>
 
+        {/* Rodapé fixo */}
         <View style={styles.rodape}>
           <Pressable onPress={finalizar} disabled={carregando} style={({ pressed }) => [
             styles.botaoPagar,
             (pressed || carregando) && styles.botaoPagarPressionado,
         ]}>
-            {carregando ? (<ActivityIndicator color={colors.card}/>) : (<Text style={styles.botaoPagarTexto}>
+            {carregando ? (<ActivityIndicator color="#FFFFFF"/>) : (<Text style={styles.botaoPagarTexto}>
                 {metodo === 'pix'
                 ? `Gerar Pix · ${formatarMoeda(total)}`
                 : metodo === 'boleto'
@@ -270,16 +305,29 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
         </View>
       </KeyboardAvoidingView>
 
+      {/* Pix (demonstração) */}
+      <PixPagamento
+        visible={pixAberto}
+        valor={total}
+        onFechar={() => setPixAberto(false)}
+        onPago={() => {
+          setPixAberto(false);
+          // pequeno atraso: no iPhone, abrir um modal no mesmo instante em que outro fecha falha
+          setTimeout(() => setSucesso(true), 400);
+        }}
+      />
+
+      {/* Confirmação */}
       <Modal visible={sucesso} transparent animationType="fade" onRequestClose={concluir}>
         <View style={styles.modalFundo}>
           <View style={styles.modalCard}>
-            <Ionicons name="checkmark-circle" size={72} color={colors.success}/>
+            <Ionicons name="checkmark-circle" size={72} color="#16A34A"/>
             <Text style={styles.modalTitulo}>Pedido confirmado!</Text>
             <Text style={styles.modalTexto}>
               {metodo === 'cartao' &&
             `Pagamento aprovado em ${parcelas}x. Você receberá os detalhes por e-mail.`}
               {metodo === 'pix' &&
-            'Pedido criado. Finalize o pagamento pelo Pix para liberarmos o envio.'}
+            'Pagamento via Pix aprovado (demonstração). Você receberá os detalhes por e-mail.'}
               {metodo === 'boleto' &&
             'Pedido criado. Pague o boleto até o vencimento para liberarmos o envio.'}
             </Text>
@@ -291,130 +339,141 @@ export default function PagamentoScreen({ itens = [], frete = 19.9, onVoltar, on
       </Modal>
     </SafeAreaView>);
 }
+/* -------------------------------------------------------------------------- */
+/* Estilos                                                                    */
+/* -------------------------------------------------------------------------- */
 const styles = StyleSheet.create({
     flex: { flex: 1 },
-    safe: { flex: 1, backgroundColor: colors.background },
+    safe: { flex: 1, backgroundColor: '#F7F7F8' },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: colors.card,
+        backgroundColor: '#FFFFFF',
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: colors.border,
+        borderBottomColor: '#E5E7EB',
     },
     botaoVoltar: { width: 32, height: 32, justifyContent: 'center' },
-    headerTitulo: { fontSize: 18, fontWeight: '700', color: colors.text },
+    headerTitulo: { fontSize: 18, fontWeight: '700', color: '#111827' },
     conteudo: { padding: 16, paddingBottom: 24 },
     secaoTitulo: {
         fontSize: 15,
         fontWeight: '700',
-        color: colors.text,
+        color: '#111827',
         marginTop: 8,
         marginBottom: 10,
     },
     card: {
-        backgroundColor: colors.card,
-        borderRadius: radius.md,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 14,
         padding: 14,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: '#E5E7EB',
     },
+    // Itens
     itemLinha: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-    itemLinhaBorda: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+    itemLinhaBorda: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E5E7EB' },
     itemImagem: {
         width: 56,
         height: 56,
-        borderRadius: radius.sm,
-        backgroundColor: colors.background,
+        borderRadius: 10,
+        backgroundColor: '#F3F4F6',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    itemNome: { fontSize: 14, fontWeight: '600', color: colors.text },
-    itemDetalhe: { fontSize: 12, color: colors.muted, marginTop: 2 },
-    itemPreco: { fontSize: 14, fontWeight: '700', color: colors.text },
+    itemNome: { fontSize: 14, fontWeight: '600', color: '#111827' },
+    itemDetalhe: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+    itemPreco: { fontSize: 14, fontWeight: '700', color: '#111827' },
+    // Métodos
     metodosLinha: { flexDirection: 'row', gap: 10, marginBottom: 14 },
     metodo: {
         flex: 1,
         alignItems: 'center',
         gap: 6,
         paddingVertical: 14,
-        borderRadius: radius.md,
-        backgroundColor: colors.card,
+        borderRadius: 12,
+        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: '#E5E7EB',
     },
-    metodoAtivo: { backgroundColor: colors.primary, borderColor: colors.primary },
-    metodoTexto: { fontSize: 13, fontWeight: '600', color: colors.text },
-    metodoTextoAtivo: { color: colors.card },
+    metodoAtivo: { backgroundColor: '#111827', borderColor: '#111827' },
+    metodoTexto: { fontSize: 13, fontWeight: '600', color: '#374151' },
+    metodoTextoAtivo: { color: '#FFFFFF' },
+    // Formulário
     campoWrapper: { marginBottom: 12 },
-    rotulo: { fontSize: 12, fontWeight: '600', color: colors.muted, marginBottom: 6 },
+    rotulo: { fontSize: 12, fontWeight: '600', color: '#4B5563', marginBottom: 6 },
     input: {
-        height: 52,
-        borderRadius: radius.sm,
+        height: 48,
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: '#D1D5DB',
         paddingHorizontal: 12,
         fontSize: 15,
-        color: colors.text,
-        backgroundColor: colors.card,
+        color: '#111827',
+        backgroundColor: '#FFFFFF',
     },
-    inputErro: { borderColor: colors.error },
-    textoErro: { fontSize: 12, color: colors.error, marginTop: 4 },
+    inputErro: { borderColor: '#DC2626' },
+    textoErro: { fontSize: 12, color: '#DC2626', marginTop: 4 },
     linhaDupla: { flexDirection: 'row' },
     espacoColunas: { width: 12 },
+    // Parcelas
     parcelasLinha: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     parcela: {
         width: '48%',
         paddingVertical: 10,
         paddingHorizontal: 12,
-        borderRadius: radius.sm,
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.card,
+        borderColor: '#D1D5DB',
+        backgroundColor: '#FFFFFF',
     },
-    parcelaAtiva: { backgroundColor: colors.primary, borderColor: colors.primary },
-    parcelaTexto: { fontSize: 13, fontWeight: '600', color: colors.text },
-    parcelaSub: { fontSize: 11, color: colors.muted, marginTop: 1 },
-    parcelaTextoAtivo: { color: colors.card },
+    parcelaAtiva: { backgroundColor: '#111827', borderColor: '#111827' },
+    parcelaTexto: { fontSize: 13, fontWeight: '600', color: '#111827' },
+    parcelaSub: { fontSize: 11, color: '#6B7280', marginTop: 1 },
+    parcelaTextoAtivo: { color: '#FFFFFF' },
+    // Pix / boleto
     infoBox: {
         flexDirection: 'row',
         gap: 10,
         padding: 14,
-        borderRadius: radius.md,
-        backgroundColor: `${colors.accent}22`,
+        borderRadius: 12,
+        backgroundColor: '#ECFDF5',
         borderWidth: 1,
-        borderColor: `${colors.accent}66`,
+        borderColor: '#BBF7D0',
         marginBottom: 16,
     },
-    infoTexto: { flex: 1, fontSize: 13, lineHeight: 19, color: colors.text },
+    infoTexto: { flex: 1, fontSize: 13, lineHeight: 19, color: '#374151' },
+    // Totais
     totalLinha: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 },
-    totalRotulo: { fontSize: 14, color: colors.muted },
-    totalValor: { fontSize: 14, color: colors.text, fontWeight: '500' },
-    descontoValor: { color: colors.success },
-    divisor: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: 8 },
-    totalFinalRotulo: { fontSize: 16, fontWeight: '700', color: colors.text },
-    totalFinalValor: { fontSize: 18, fontWeight: '800', color: colors.text },
+    totalRotulo: { fontSize: 14, color: '#4B5563' },
+    totalValor: { fontSize: 14, color: '#111827', fontWeight: '500' },
+    descontoValor: { color: '#16A34A' },
+    divisor: { height: StyleSheet.hairlineWidth, backgroundColor: '#E5E7EB', marginVertical: 8 },
+    totalFinalRotulo: { fontSize: 16, fontWeight: '700', color: '#111827' },
+    totalFinalValor: { fontSize: 18, fontWeight: '800', color: '#111827' },
     seguro: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-    seguroTexto: { fontSize: 12, color: colors.muted },
+    seguroTexto: { fontSize: 12, color: '#6B7280' },
+    // Rodapé / botão
     rodape: {
         padding: 16,
-        backgroundColor: colors.card,
+        backgroundColor: '#FFFFFF',
         borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: colors.border,
+        borderTopColor: '#E5E7EB',
     },
     botaoPagar: {
         height: 52,
-        borderRadius: radius.md,
-        backgroundColor: colors.primary,
+        borderRadius: 12,
+        backgroundColor: '#111827',
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'stretch',
     },
     botaoPagarPressionado: { opacity: 0.8 },
-    botaoPagarTexto: { color: colors.card, fontSize: 16, fontWeight: '700' },
+    botaoPagarTexto: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+    // Modal
     modalFundo: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.55)',
@@ -425,17 +484,17 @@ const styles = StyleSheet.create({
     modalCard: {
         width: '100%',
         maxWidth: 380,
-        backgroundColor: colors.card,
-        borderRadius: radius.lg,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 18,
         padding: 24,
         alignItems: 'center',
         gap: 10,
     },
-    modalTitulo: { fontSize: 20, fontWeight: '800', color: colors.text },
+    modalTitulo: { fontSize: 20, fontWeight: '800', color: '#111827' },
     modalTexto: {
         fontSize: 14,
         lineHeight: 20,
-        color: colors.muted,
+        color: '#4B5563',
         textAlign: 'center',
         marginBottom: 10,
     },
