@@ -2,13 +2,13 @@ import React from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { colors, radius } from '../theme';
 
-export default function Input({ label, error, ...props }) {
+export default function Input({ label, error, style, ...props }) {
   return (
     <View style={styles.container}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
         placeholderTextColor={colors.muted}
-        style={[styles.input, error && { borderColor: colors.error }]}
+        style={[styles.input, error && { borderColor: colors.error }, style]}
         autoCapitalize="none"
         {...props}
       />

@@ -19,6 +19,16 @@ export function validateRegister({ nome, email, senha, confirmar }) {
   return errors;
 }
 
+export function validateChangePassword({ atual, nova, confirmar }) {
+  const errors = {};
+  if (!atual) errors.atual = 'Informe sua senha atual.';
+  if (!nova) errors.nova = 'Informe a nova senha.';
+  else if (nova.length < 6) errors.nova = 'A senha deve ter ao menos 6 caracteres.';
+  else if (nova === atual) errors.nova = 'A nova senha deve ser diferente da atual.';
+  if (confirmar !== nova) errors.confirmar = 'As senhas não conferem.';
+  return errors;
+}
+
 export const formatPrice = (value) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -32,6 +42,10 @@ export function firebaseErrorMessage(code) {
       return 'Este e-mail já está cadastrado.';
     case 'auth/weak-password':
       return 'Senha muito fraca.';
+    case 'auth/too-many-requests':
+      return 'Muitas tentativas. Tente novamente em instantes.';
+    case 'auth/requires-recent-login':
+      return 'Por segurança, saia e entre de novo para fazer essa alteração.';
     case 'auth/network-request-failed':
       return 'Sem conexão com a internet.';
     default:

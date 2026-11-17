@@ -1,16 +1,28 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import ProductCard from './ProductCard';
 import Loading from './Loading';
 import { colors } from '../theme';
 import { fetchProducts } from '../services/productService';
+import { stockOf } from '../data/products';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from './Toast';
 
-// Lista de produtos reutilizada na Home e nos catálogos masculino/feminino.
-// Adicionar ao carrinho exige login: se não estiver logado, vai para a tela de login.
+function colunasPorLargura(largura) {
+  if (largura >= 900) return 4;
+  if (largura >= 600) return 3;
+  return 2;
+}
+
 export default function ProductGrid({ categoria, onlyFeatured = false, header }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +31,8 @@ export default function ProductGrid({ categoria, onlyFeatured = false, header })
   const { addItem } = useCart();
   const router = useRouter();
   const toast = useToast();
+  const { width } = useWindowDimensions();
+  const colunas = colunasPorLargura(width);
 
   const load = useCallback(async () => {
     const list = await fetchProducts(categoria);
@@ -40,27 +54,62 @@ export default function ProductGrid({ categoria, onlyFeatured = false, header })
       router.push('/login');
       return;
     }
-    addItem(item);
-    toast.show(`${item.nome} (${item.tamanho}) adicionado ao carrinho`);
+    const max = stockOf(item, item.tamanho);
+    const ok = addItem({
+      id: item.id,
+      nome: item.nome,
+      preco: item.preco,
+      imagem: item.imagem,
+      tamanho: item.tamanho,
+      max: max === Infinity ? null : max,
+    });
+    if (ok) {
+      toast.show(`${item.nome} (${item.tamanho}) adicionado ao carrinho`);
+    } else {
+      toast.show(`Você já tem todo o estoque do tamanho ${item.tamanho} no carrinho`, 'error');
+    }
   };
 
   if (loading) return <Loading />;
 
+  const resto = data.length % colunas;
+  const lista =
+    resto === 0
+      ? data
+      : [
+          ...data,
+          ...Array.from({ length: colunas - resto }, (_, i) => ({
+            id: `vazio-${i}`,
+            vazio: true,
+          })),
+        ];
+
   return (
     <FlatList
-      data={data}
+      key={colunas}
+      data={lista}
       keyExtractor={(item) => item.id}
-      numColumns={2}
+      numColumns={colunas}
+      style={styles.fundo}
       contentContainerStyle={styles.list}
       ListHeaderComponent={header}
       ListEmptyComponent={<Text style={styles.empty}>Nenhum produto encontrado.</Text>}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      renderItem={({ item }) => <ProductCard product={item} onAdd={handleAdd} />}
+      renderItem={({ item }) =>
+        item.vazio ? <View style={styles.vazio} /> : <ProductCard product={item} onAdd={handleAdd} />
+      }
     />
   );
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 10, backgroundColor: colors.background },
+  fundo: { backgroundColor: colors.background },
+  list: {
+    padding: 10,
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
+  },
+  vazio: { flex: 1, margin: 6 },
   empty: { textAlign: 'center', color: colors.muted, marginTop: 40 },
 });

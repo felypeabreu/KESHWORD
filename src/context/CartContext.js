@@ -39,7 +39,6 @@ export function CartProvider({ children }) {
   const [items, dispatch] = useReducer(reducer, []);
   const loaded = useRef(false);
 
-  // Ao logar: carrega o carrinho salvo no Firestore. Ao sair: limpa.
   useEffect(() => {
     loaded.current = false;
     if (!user) {
@@ -54,7 +53,6 @@ export function CartProvider({ children }) {
       });
   }, [user?.uid]);
 
-  // Sempre que o carrinho muda (e já foi carregado), salva no Firestore.
   useEffect(() => {
     if (user && loaded.current) {
       saveCart(user.uid, items).catch((e) => console.warn('Erro ao salvar carrinho:', e.message));
@@ -69,8 +67,19 @@ export function CartProvider({ children }) {
     total,
     count,
     keyOf,
-    addItem: (item) => dispatch({ type: 'ADD', item }),
-    increment: (key) => dispatch({ type: 'INC', key }),
+    addItem: (item) => {
+      const atual = items.find((i) => keyOf(i) === keyOf(item));
+      const max = item.max ?? atual?.max;
+      if (max != null && (atual?.qtd || 0) >= max) return false;
+      dispatch({ type: 'ADD', item });
+      return true;
+    },
+    increment: (key) => {
+      const atual = items.find((i) => keyOf(i) === key);
+      if (atual && atual.max != null && atual.qtd >= atual.max) return false;
+      dispatch({ type: 'INC', key });
+      return true;
+    },
     decrement: (key) => dispatch({ type: 'DEC', key }),
     removeItem: (key) => dispatch({ type: 'REMOVE', key }),
     clear: () => dispatch({ type: 'CLEAR' }),

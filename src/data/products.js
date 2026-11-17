@@ -1,4 +1,29 @@
-export const PRODUCTS = [
+import { Asset } from 'expo-asset';
+
+const ESTOQUE = {
+  1: [12, 20, 15, 6],
+  2: [8, 14, 3, 0],
+  3: [10, 18, 12, 5],
+  4: [6, 11, 9, 2],
+  5: [7, 12, 10, 4],
+  6: [9, 15, 11, 3],
+  7: [5, 9, 8, 1],
+  8: [6, 10, 8, 0],
+  9: [7, 12, 9, 4],
+  10: [5, 8, 7, 2],
+  11: [25],
+  12: [18],
+  13: [6, 10, 12, 8],
+  14: [7, 11, 9, 5],
+  15: [4, 8, 6, 2],
+  16: [0, 5, 7, 3],
+  17: [6, 9, 8, 4],
+  18: [5, 8, 7, 1],
+  19: [20],
+  20: [15],
+};
+
+const PRODUTOS_BASE = [
   {
     id: 1,
     name: 'Camiseta Oversized Pixel',
@@ -33,7 +58,7 @@ export const PRODUCTS = [
     price: 99.90,
     bg: '#0032A8',
     sizes: ['P', 'M', 'G', 'GG'],
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/camiseta-time-de-rua.jpg'),
   },
   {
     id: 4,
@@ -56,11 +81,11 @@ export const PRODUCTS = [
     price: 189.90,
     bg: '#0032A8',
     sizes: ['P', 'M', 'G', 'GG'],
-    image: 'https://images.unsplash.com/photo-1578768079052-aa76e52ff62e?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/moletom-careca-soft.jpg'),
   },
   {
     id: 6,
-    name: 'Jaqueta Bomber Neon',
+    name: 'Jaqueta Bomber',
     cat: 'Jaquetas',
     category: 'jaquetas',
     gender: 'masculino',
@@ -69,7 +94,7 @@ export const PRODUCTS = [
     badge: '-13%',
     bg: '#FEF1CF',
     sizes: ['P', 'M', 'G', 'GG'],
-    image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/jaqueta-bomber.jpg'),
   },
   {
     id: 7,
@@ -80,7 +105,7 @@ export const PRODUCTS = [
     price: 279.90,
     bg: '#FC3B7F',
     sizes: ['P', 'M', 'G', 'GG'],
-    image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/jaqueta-corta-vento.jpg'),
   },
   {
     id: 8,
@@ -91,7 +116,7 @@ export const PRODUCTS = [
     price: 199.90,
     bg: '#FEF1CF',
     sizes: ['38', '40', '42', '44'],
-    image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/calca-cargo-bolsos.jpg'),
   },
   {
     id: 9,
@@ -103,7 +128,7 @@ export const PRODUCTS = [
     badge: 'NOVO',
     bg: '#FC3B7F',
     sizes: ['38', '40', '42', '44'],
-    image: 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/calca-jogger-azul.jpg'),
   },
   {
     id: 10,
@@ -114,7 +139,7 @@ export const PRODUCTS = [
     price: 139.90,
     bg: '#0032A8',
     sizes: ['38', '40', '42', '44'],
-    image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/bermuda-cargo.jpg'),
   },
   {
     id: 11,
@@ -125,11 +150,11 @@ export const PRODUCTS = [
     price: 69.90,
     bg: '#FEF1CF',
     sizes: ['Único'],
-    image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/bone-dad-hat.jpg'),
   },
   {
     id: 12,
-    name: 'Boné Trucker',
+    name: 'Boné Five Panel',
     cat: 'Acessórios',
     category: 'acessorios',
     gender: 'masculino',
@@ -138,8 +163,169 @@ export const PRODUCTS = [
     badge: '-17%',
     bg: '#FC3B7F',
     sizes: ['Único'],
-    image: 'https://images.unsplash.com/photo-1521369909029-2afed882baee?auto=format&fit=crop&w=600&q=70',
+    image: require('../../assets/produtos/bone-five-panel.jpg'),
+  },
+  {
+    id: 13,
+    name: 'Cropped Boxy Logo',
+    cat: 'Camisetas',
+    category: 'camisetas',
+    gender: 'feminino',
+    price: 79.90,
+    badge: 'NOVO',
+    bg: '#FC3B7F',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/cropped-boxy-logo.jpg'),
+  },
+  {
+    id: 14,
+    name: 'Blusa Street',
+    cat: 'Camisetas',
+    category: 'camisetas',
+    gender: 'feminino',
+    price: 69.90,
+    bg: '#FEF1CF',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/blusa-street.jpg'),
+  },
+  {
+    id: 15,
+    name: 'Moletom Cropped Capuz',
+    cat: 'Moletons',
+    category: 'moletons',
+    gender: 'feminino',
+    price: 169.90,
+    old: 199.90,
+    badge: '-15%',
+    bg: '#0032A8',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/moletom-cropped-capuz.jpg'),
+  },
+  {
+    id: 16,
+    name: 'Jaqueta Corta-vento Cropped',
+    cat: 'Jaquetas',
+    category: 'jaquetas',
+    gender: 'feminino',
+    price: 219.90,
+    badge: 'NOVO',
+    bg: '#FEF1CF',
+    sizes: ['PP', 'P', 'M', 'G'],
+    image: require('../../assets/produtos/jaqueta-corta-vento-cropped.jpg'),
+  },
+  {
+    id: 17,
+    name: 'Calça Wide Leg Cargo',
+    cat: 'Calças',
+    category: 'calcas',
+    gender: 'feminino',
+    price: 189.90,
+    bg: '#FC3B7F',
+    sizes: ['36', '38', '40', '42'],
+    image: require('../../assets/produtos/calca-wide-leg-cargo.jpg'),
+  },
+  {
+    id: 18,
+    name: 'Calça Jogger Feminina',
+    cat: 'Calças',
+    category: 'calcas',
+    gender: 'feminino',
+    price: 159.90,
+    bg: '#FEF1CF',
+    sizes: ['36', '38', '40', '42'],
+    image: require('../../assets/produtos/calca-jogger-feminina.jpg'),
+  },
+  {
+    id: 19,
+    name: 'Boné Aba Curva',
+    cat: 'Acessórios',
+    category: 'acessorios',
+    gender: 'feminino',
+    price: 64.90,
+    bg: '#0032A8',
+    sizes: ['Único'],
+    image: require('../../assets/produtos/bone-aba-curva.jpg'),
+  },
+  {
+    id: 20,
+    name: 'Bucket Hat',
+    cat: 'Acessórios',
+    category: 'acessorios',
+    gender: 'feminino',
+    price: 69.90,
+    bg: '#FEF1CF',
+    sizes: ['Único'],
+    image: require('../../assets/produtos/bucket-hat.jpg'),
   },
 ];
+
+export const PRODUCTS = PRODUTOS_BASE.map((p) => ({
+  ...p,
+  stock: Object.fromEntries(p.sizes.map((sz, i) => [sz, ESTOQUE[p.id]?.[i] ?? 0])),
+}));
+
+export const LOW_STOCK = 3;
+
+export const stockOf = (product, size) => {
+  if (!product || !product.stock) return Infinity;
+  const n = product.stock[size];
+  return typeof n === 'number' ? n : Infinity;
+};
+
+export const totalStock = (product) => {
+  if (!product || !product.stock) return Infinity;
+  return Object.values(product.stock).reduce((a, b) => a + (Number(b) || 0), 0);
+};
+
+export const stockLabel = (qty) => {
+  if (qty === Infinity) return '';
+  if (qty <= 0) return 'Esgotado';
+  if (qty <= LOW_STOCK) return qty === 1 ? 'Última unidade!' : `Últimas ${qty} unidades`;
+  return '';
+};
+
+export const firstAvailableSize = (product, sizes) => {
+  const list = sizes || product?.sizes || [];
+  const preferida = list[Math.min(1, list.length - 1)];
+  if (stockOf(product, preferida) > 0) return preferida;
+  return list.find((sz) => stockOf(product, sz) > 0) ?? preferida;
+};
+
+export const imageSource = (product) => {
+  if (!product.image) return null;
+  return typeof product.image === 'string' ? { uri: product.image } : product.image;
+};
+
+export const imageUri = (product) => {
+  if (!product.image) return '';
+  if (typeof product.image === 'string') return product.image;
+  try {
+    return Asset.fromModule(product.image).uri;
+  } catch (e) {
+    return '';
+  }
+};
+
+export const sizes = ['P', 'M', 'G', 'GG'];
+
+export const products = PRODUCTS.map((p) => ({
+  id: String(p.id),
+  nome: p.name,
+  preco: p.price,
+  imagem: imageUri(p),
+  categoria: p.gender || 'masculino',
+  destaque: Boolean(p.badge),
+}));
+
+export const findProductById = (id) => PRODUCTS.find((p) => String(p.id) === String(id));
+
+export const toCartItem = (product, tamanho) => ({
+  id: String(product.id),
+  nome: product.name,
+  preco: product.price,
+  imagem: imageUri(product),
+  tamanho,
+  max: stockOf(product, tamanho) === Infinity ? null : stockOf(product, tamanho),
+});
 
 export default PRODUCTS;

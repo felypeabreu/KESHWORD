@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import LogoKW from '../src/components/LogoKW';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../src/components/Button';
 import Input from '../src/components/Input';
@@ -36,7 +37,10 @@ export default function Login() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.logo}>KESH</Text>
+        <View style={styles.logoRow}>
+          <LogoKW size={44} />
+          <Text style={styles.logo}>KESH</Text>
+        </View>
         <Text style={styles.sub}>Entre para usar seu carrinho</Text>
 
         <Input
@@ -68,6 +72,7 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: 24, backgroundColor: colors.background },
+  logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   logo: { fontSize: 40, fontWeight: '900', letterSpacing: 6, textAlign: 'center', color: colors.primary },
   sub: { textAlign: 'center', color: colors.muted, marginBottom: 32, marginTop: 4 },
   link: { textAlign: 'center', color: colors.text },

@@ -1,26 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../../src/components/Button';
 import Loading from '../../src/components/Loading';
-import { useToast } from '../../src/components/Toast';
 import { useAuth } from '../../src/context/AuthContext';
 import { useCart } from '../../src/context/CartContext';
-import { createOrder } from '../../src/services/cartService';
 import { formatPrice } from '../../src/utils/validation';
 import { colors, radius } from '../../src/theme';
 
 export default function Carrinho() {
   const router = useRouter();
-  const toast = useToast();
   const { user, initializing, logout } = useAuth();
-  const { items, total, keyOf, increment, decrement, removeItem, clear } = useCart();
-  const [finishing, setFinishing] = useState(false);
+  const { items, total, keyOf, increment, decrement, removeItem } = useCart();
 
   if (initializing) return <Loading />;
 
-  // Login só é exigido para usar o carrinho
   if (!user) {
     return (
       <View style={styles.center}>
@@ -47,18 +42,9 @@ export default function Carrinho() {
     );
   }
 
-  const finalizar = async () => {
-    try {
-      setFinishing(true);
-      await createOrder(user.uid, items, total);
-      clear();
-      toast.show('Compra finalizada com sucesso!');
-    } catch (e) {
-      toast.show('Não foi possível finalizar a compra.', 'error');
-    } finally {
-      setFinishing(false);
-    }
-  };
+  const noMax = (item) => item.max != null && item.qtd >= item.max;
+
+  const finalizar = () => router.push('/Pagamento');
 
   const confirmRemove = (item) =>
     Alert.alert('Remover item', `Remover ${item.nome} do carrinho?`, [
@@ -85,10 +71,15 @@ export default function Carrinho() {
                   <Ionicons name="remove" size={16} color={colors.text} />
                 </Pressable>
                 <Text style={styles.qty}>{item.qtd}</Text>
-                <Pressable style={styles.qtyBtn} onPress={() => increment(keyOf(item))}>
+                <Pressable
+                  style={[styles.qtyBtn, noMax(item) && { opacity: 0.35 }]}
+                  disabled={noMax(item)}
+                  onPress={() => increment(keyOf(item))}
+                >
                   <Ionicons name="add" size={16} color={colors.text} />
                 </Pressable>
               </View>
+              {noMax(item) ? <Text style={styles.itemMeta}>Máximo em estoque</Text> : null}
             </View>
             <Pressable onPress={() => confirmRemove(item)} hitSlop={10}>
               <Ionicons name="trash-outline" size={22} color={colors.error} />
@@ -102,7 +93,7 @@ export default function Carrinho() {
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalValue}>{formatPrice(total)}</Text>
         </View>
-        <Button title="Finalizar compra" onPress={finalizar} loading={finishing} />
+        <Button title="Finalizar compra" onPress={finalizar} />
       </View>
     </View>
   );

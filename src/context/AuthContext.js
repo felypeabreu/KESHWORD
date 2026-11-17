@@ -4,6 +4,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   signOut,
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
@@ -34,8 +37,20 @@ export function AuthProvider({ children }) {
 
   const logout = () => signOut(auth);
 
+  const updateName = async (nome) => {
+    await updateProfile(auth.currentUser, { displayName: nome.trim() });
+    setUser({ ...auth.currentUser, displayName: nome.trim() });
+  };
+
+  const changePassword = async (senhaAtual, novaSenha) => {
+    const current = auth.currentUser;
+    const credential = EmailAuthProvider.credential(current.email, senhaAtual);
+    await reauthenticateWithCredential(current, credential);
+    await updatePassword(current, novaSenha);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, initializing, login, register, logout }}>
+    <AuthContext.Provider value={{ user, initializing, login, register, logout, updateName, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

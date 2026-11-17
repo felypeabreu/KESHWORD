@@ -4,7 +4,6 @@ import { colors, radius } from '../theme';
 
 const ToastContext = createContext({ show: () => {} });
 
-// Mensagem rápida de feedback (sucesso/erro) exibida no topo da tela.
 export function ToastProvider({ children }) {
   const [message, setMessage] = useState('');
   const [type, setType] = useState('success');
